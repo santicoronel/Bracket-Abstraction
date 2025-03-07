@@ -15,11 +15,18 @@ let rec bracket_abstraction0 (t : term) : Tot term =
   | Abs _ t -> abstract (bracket_abstraction0 t)
   | _ -> t
 
+let rec bracket_abs_app (a : ty) (t u : term)
+: Lemma (bracket_abstraction0 (Abs a (App t u))
+        = App (App S (bracket_abstraction0 (Abs a t))) (bracket_abstraction0 (Abs a u)))
+= ()
+
 
 let rec abstraction_ski (t : ski) : Lemma (is_SKI (abstract t)) =
   match t with
   | App t u -> abstraction_ski t ; abstraction_ski u
   | _ -> _
+
+let abstract_ski (t : ski) : ski = abstraction_ski t ; abstract t
 
 let rec bracket_ski (t : term) : Lemma (is_SKI (bracket_abstraction0 t)) =
   match t with
