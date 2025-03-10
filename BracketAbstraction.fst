@@ -2,59 +2,34 @@ module BracketAbstraction
 
 open SKI
 
-let rec abstract (t : term) : Tot term (decreases t) =
+let rec abstract (t : ski) : Tot ski (decreases t) =
   match t with
   | Var 0 -> I
   | Var i -> App K (Var (i - 1))
   | App t u -> App (App S (abstract t)) (abstract u)
   | _ -> App K t
 
-let rec bracket_abstraction0 (t : term) : Tot term =
+let rec bracket_abstraction (t : term) : Tot ski =
   match t with
-  | App t u -> App (bracket_abstraction0 t) (bracket_abstraction0 u)
-  | Abs _ t -> abstract (bracket_abstraction0 t)
+  | App t u -> App (bracket_abstraction t) (bracket_abstraction u)
+  | Abs _ t -> abstract (bracket_abstraction t)
   | _ -> t
 
-let rec bracket_abs_app (a : ty) (t u : term)
-: Lemma (bracket_abstraction0 (Abs a (App t u))
-        = App (App S (bracket_abstraction0 (Abs a t))) (bracket_abstraction0 (Abs a u)))
-= ()
-
-
-let rec abstraction_ski (t : ski) : Lemma (is_SKI (abstract t)) =
-  match t with
-  | App t u -> abstraction_ski t ; abstraction_ski u
-  | _ -> _
-
-let abstract_ski (t : ski) : ski = abstraction_ski t ; abstract t
-
-let rec bracket_ski (t : term) : Lemma (is_SKI (bracket_abstraction0 t)) =
-  match t with
-  | App t u -> bracket_ski t ; bracket_ski u
-  | Abs _ t -> bracket_ski t ; abstraction_ski (bracket_abstraction0 t)
-  | _ -> ()
-
-
 let rec closed_abstraction (n : pos) (t : nclosed_ski n)
-: Lemma (ensures nclosed (n - 1) (abstract t) && is_SKI (abstract t)) =
+: Lemma (ensures nclosed (n - 1) (abstract t)) =
   match t with
   | App t u -> closed_abstraction n t ; closed_abstraction n u
   | _ -> ()
 
 let rec closed_bracket (n : nat) (t : nclosed_term n)
-: Lemma (ensures nclosed n (bracket_abstraction0 t) && is_SKI (bracket_abstraction0 t))
+: Lemma (ensures nclosed n (bracket_abstraction t))
         (decreases t) =
   match t with
   | App t u -> closed_bracket n t ; closed_bracket n u
   | Abs _ t ->
     closed_bracket (n + 1) t ;
-    closed_abstraction (n + 1) (bracket_abstraction0 t)
+    closed_abstraction (n + 1) (bracket_abstraction t)
   | _ -> ()
-
-
-let bracket_abstraction (t : lam) : ski =
-  bracket_ski t ;
-  bracket_abstraction0 t
 
 let nclosed_abstraction (n : pos) (t : nclosed_ski n) : nclosed_ski (n -1) =
   closed_abstraction n t ;
@@ -62,8 +37,8 @@ let nclosed_abstraction (n : pos) (t : nclosed_ski n) : nclosed_ski (n -1) =
 
 let nclosed_bracket_abstraction (n : nat) (t : nclosed_lam n) : nclosed_ski n =
   closed_bracket n t ;
-  bracket_abstraction0 t
+  bracket_abstraction t
 
 let closed_bracket_abstraction (t : closed_lam) : closed_ski =
   closed_bracket 0 t ;
-  bracket_abstraction0 t
+  bracket_abstraction t

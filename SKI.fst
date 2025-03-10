@@ -61,6 +61,23 @@ let nclosed_ski (n : nat) = t : ski {nclosed n t}
 
 let closed_ski = nclosed_ski 0
 
+let rec apps_aux (t : term) (l : list term)
+: Pure term
+       true
+       (fun t' ->
+        (is_Lam t /\ for_all is_Lam l ==> is_Lam t') /\
+        (is_SKI t /\ for_all is_SKI l ==> is_SKI t'))
+       (decreases l)
+= match l with
+  | [] -> t
+  | u::us -> apps_aux (App t u) us
+
+let apps (l : list term)
+: Pure term
+       (length l > 0)
+       (fun t -> for_all is_Lam l ==> is_Lam t /\ for_all is_SKI l ==> is_SKI t)
+= let t::ts = l in apps_aux t ts
+
 let rec extend_lem (#n #k : nat) (t : nclosed_term n)
 : Lemma (ensures nclosed (n + k) t) (decreases t) =
   match t with
@@ -83,3 +100,40 @@ let rec extend_ski (#n #k : nat) (t : ski)
   match t with
   | App t u -> App (extend_ski #n #k t) (extend_ski #n #k u)
   | _ -> t
+
+
+let max (x y : int)
+: Pure int true (fun z -> (z = x \/ z = y) /\ x <= z /\ y <= z)
+= if x < y then y else x
+
+let rec free (i : nat) (t : term) : Tot bool (decreases t)
+= match t with
+  | Var j -> j = i
+  | Abs _ t -> free (i + 1) t
+  | App t u -> free i t || free i u
+  | _ -> false
+
+let not_free (i : nat) (t : term) = not (free i t)
+
+let rec freshn (n : nat) (t : term)
+: Pure nat true (fun i -> forall (j : nat). free (j + n) t ==> i > j) (decreases t)
+= match t with
+  | Var i -> if i < n then 0 else i - n + 1
+  | Abs _ t -> freshn (n + 1) t
+  | App t u -> max (freshn n t) (freshn n u)
+  | _ -> 0
+
+let fresh (t : term) : i : nat {not_free i t} = freshn 0 t
+
+let fresh_var (t : term)
+: Pure term true (fun x -> exists (i : nat). x = Var i && not_free i t)
+= Var (fresh t)
+
+let rec fresh_for_all (l : list term)
+: Pure nat true 
+      (fun i -> for_all (not_free i) l /\ 
+                (forall (j : nat). j > i ==> for_all (not_free j) l))
+= match l with
+  | [] -> 0
+  | t :: ts ->
+  max (fresh t) (fresh_for_all ts)
