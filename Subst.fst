@@ -6,14 +6,14 @@ let rec shiftn (n : nat) (t : term)
 : Pure term true (fun t' -> not (free n t')) (decreases t) =
   match t with
   | Var i -> if i < n then Var i else Var (i + 1)
-  | Abs a t -> Abs a (shiftn (n + 1) t)
+  | Abs t -> Abs (shiftn (n + 1) t)
   | App t u -> App (shiftn n t) (shiftn n u)
   | _ -> t
 
 let rec shiftn_lam_lem (n : nat) (t : lam)
 : Lemma (ensures is_Lam (shiftn n t)) (decreases t)
 = match t with
-  | Abs _ t -> shiftn_lam_lem (n + 1) t
+  | Abs t -> shiftn_lam_lem (n + 1) t
   | App t u -> shiftn_lam_lem n t ; shiftn_lam_lem n u
   | _ -> ()
 
@@ -39,7 +39,7 @@ let shift_ski (t : ski) : Pure ski true (fun t' -> not (free 0 t'))
 let rec shiftn_nclosed_lem (#n #i : nat) (t : nclosed_term n)
 : Lemma (ensures nclosed (n + 1) (shiftn i t)) (decreases t) =
   match t with
-  | Abs a t -> shiftn_nclosed_lem #(n + 1) #(i + 1) t
+  | Abs t -> shiftn_nclosed_lem #(n + 1) #(i + 1) t
   | App t u -> shiftn_nclosed_lem #n #i t ; shiftn_nclosed_lem #n #i u
   | _ -> ()
 
@@ -58,7 +58,7 @@ let rec subst (t v : term) (n : nat) : term =
     else if i = n
     then v
     else Var (i - 1)
-  | Abs a t -> Abs a (subst t (shift v) (n + 1))
+  | Abs t -> Abs (subst t (shift v) (n + 1))
   | App t u -> App (subst t v n) (subst u v n)
   | _ -> t
 
@@ -69,7 +69,7 @@ let rec nclosed_subst_lem (#n : nat)
                  (i <= n ==> nclosed n (subst t v i)))
         (decreases t)
 = match t with
-  | Abs _ t ->
+  | Abs t ->
     shiftn_nclosed_lem #n #0 v ;
     nclosed_subst_lem #(n + 1) t (shift v) (i + 1)
   | App t u ->
@@ -81,7 +81,7 @@ let rec nclosed_subst_lem (#n : nat)
 let rec subst_lam_lem (t : lam) (v : lam) (n : nat)
 : Lemma (is_Lam (subst t v n))
 = match t with
-  | Abs a t -> shiftn_lam_lem 0 v ; subst_lam_lem t (shift v) (n + 1)
+  | Abs t -> shiftn_lam_lem 0 v ; subst_lam_lem t (shift v) (n + 1)
   | App t u -> subst_lam_lem t v n ; subst_lam_lem u v n 
   | _ -> ()
 
@@ -96,7 +96,7 @@ let subst_nclosed_lam (#n : nat)
 let rec subst_ski_lem (t : ski) (v : ski) (n : nat)
 : Lemma (is_SKI (subst t v n))
 = match t with
-  | Abs a t -> shiftn_ski_lem 0 v; subst_ski_lem t (shift v) (n + 1)
+  | Abs t -> shiftn_ski_lem 0 v; subst_ski_lem t (shift v) (n + 1)
   | App t u -> subst_ski_lem t v n ; subst_ski_lem u v n 
   | _ -> ()
 
@@ -113,7 +113,7 @@ let subst0 (t : lam) (v : lam) : lam = subst_lam t v 0
 let rec subst_free (t v : term) (i : nat)
 : Lemma (requires not_free i t) (ensures shiftn i (subst t v i) = t)
 = match t with
-  | Abs _ t -> subst_free t (shift v) (i + 1)
+  | Abs t -> subst_free t (shift v) (i + 1)
   | App t u -> subst_free t v i ; subst_free u v i
   | _ -> ()
 

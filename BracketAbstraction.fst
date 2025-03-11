@@ -12,7 +12,7 @@ let rec abstract (t : ski) : Tot ski (decreases t) =
 let rec bracket_abstraction (t : term) : Tot ski =
   match t with
   | App t u -> App (bracket_abstraction t) (bracket_abstraction u)
-  | Abs _ t -> abstract (bracket_abstraction t)
+  | Abs t -> abstract (bracket_abstraction t)
   | _ -> t
 
 let rec closed_abstraction (n : pos) (t : nclosed_ski n)
@@ -26,7 +26,7 @@ let rec closed_bracket (n : nat) (t : nclosed_term n)
         (decreases t) =
   match t with
   | App t u -> closed_bracket n t ; closed_bracket n u
-  | Abs _ t ->
+  | Abs t ->
     closed_bracket (n + 1) t ;
     closed_abstraction (n + 1) (bracket_abstraction t)
   | _ -> ()

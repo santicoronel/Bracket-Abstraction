@@ -2,9 +2,6 @@ module SKI
 
 open FStar.List.Tot
 
-type ty : Type =
-  | Fun : ty -> ty -> ty
-  | T : ty
 
 type term : Type =
   | Unit : term 
@@ -12,14 +9,14 @@ type term : Type =
   | S : term
   | K : term
   | I : term
-  | Abs : ty -> term -> term
+  | Abs : term -> term
   | App : term -> term -> term
 
 
 let rec nclosed (n : nat) (t : term) : Tot bool (decreases t) =
   match t with
   | Var i -> i < n
-  | Abs _ t -> nclosed (n + 1) t
+  | Abs t -> nclosed (n + 1) t
   | App t u -> nclosed n t && nclosed n u
   | _ -> true
 
@@ -36,7 +33,7 @@ let nclosed_App (n : nat) (t u : nclosed_term n)
 let rec is_Lam (t : term) : bool = match t with
   | Unit -> true
   | Var _ -> true
-  | Abs _ t -> is_Lam t
+  | Abs t -> is_Lam t
   | App t u -> is_Lam t && is_Lam u
   | _ -> false
 
@@ -82,7 +79,7 @@ let rec extend_lem (#n #k : nat) (t : nclosed_term n)
 : Lemma (ensures nclosed (n + k) t) (decreases t) =
   match t with
   | App t u -> extend_lem #n #k t ; extend_lem #n #k u
-  | Abs _ t -> extend_lem #(n + 1) #k t
+  | Abs t -> extend_lem #(n + 1) #k t
   | _ -> ()
 
 let extend (#n #k : nat) (t : term)
@@ -109,7 +106,7 @@ let max (x y : int)
 let rec free (i : nat) (t : term) : Tot bool (decreases t)
 = match t with
   | Var j -> j = i
-  | Abs _ t -> free (i + 1) t
+  | Abs t -> free (i + 1) t
   | App t u -> free i t || free i u
   | _ -> false
 
@@ -119,7 +116,7 @@ let rec freshn (n : nat) (t : term)
 : Pure nat true (fun i -> forall (j : nat). free (j + n) t ==> i > j) (decreases t)
 = match t with
   | Var i -> if i < n then 0 else i - n + 1
-  | Abs _ t -> freshn (n + 1) t
+  | Abs t' ->  freshn (n + 1) t'
   | App t u -> max (freshn n t) (freshn n u)
   | _ -> 0
 
