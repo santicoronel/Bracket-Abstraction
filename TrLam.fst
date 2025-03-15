@@ -1,6 +1,7 @@
 module TrLam
 
 open SKI
+open Subst
 
 let rec trlam (t : ski) : lam =
   match t with
@@ -14,3 +15,9 @@ let rec trlam (t : ski) : lam =
   | K -> Abs (Abs (Var 1))
   | I -> Abs (Var 0)
   | App t u -> App (trlam t) (trlam u)
+
+let rec not_free_trlam (i : nat) (t : ski)
+: Lemma (requires not_free i t) (ensures not_free i (trlam t))
+= match t with
+  | App t u -> not_free_trlam i t ; not_free_trlam i u
+  | _ -> ()
