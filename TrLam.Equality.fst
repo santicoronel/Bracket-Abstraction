@@ -99,56 +99,56 @@ let abstractx_S_f_g (f g x : lam)
   Eq_L (Tran tran beta_3)
 
 
-let abstractx_fnl (x : nat) (t : ski)
-: Pure (lam_eq (abstractx x (App (trlam t) (Var x))) (trlam t))
-       (fnl t /\ not_free x t)
+let abstract_S_1 (x : nat) (f : ski)
+: Pure (lam_eq (abstractx x (App (App (trlam S) (trlam f)) (Var x))) (trlam (App S f)))
+       (not_free x f)
        (fun _ -> true)
-= match t with
-  | S -> Down (Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) (Var 0))
-  | App S f ->
-    let f' = trlam f in
-    let sf = shift_lam f' in
-    not_free_trlam x f ;
-    _abstractxn_not_free 0 x f' ;
-    let beta_1 = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) sf in
-    let app_1 = Eq_L (AppL beta_1 (Var 0)) in
-    let down_1 = Down app_1 in
-    let s3f = shift_lam (shift_lam sf) in
-    subst_shiftn sf (Var 1) 1 0 ;
-    let beta_2 = Beta (Abs (App (App s3f (Var 0)) (App (Var 1) (Var 0)))) (Var 0) in
-    let down_2 = Down beta_2 in
-    let lhs = Eq_L (Tran down_1 down_2) in
-    let beta = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) (trlam f) in
-    let rhs = Eq_L (Symm beta) in
-    Eq_L (Tran lhs rhs)
-  | App (App S f) g ->
-    let f' = trlam f in
-    let g' = trlam g in
-    not_free_trlam x f ;
-    not_free_trlam x g ;
-    _abstractxn_not_free 0 x f' ;
-    _abstractxn_not_free 0 x g' ;
-    let sf = shift_lam f' in
-    let sg = shift_lam g' in
-    let ssf = shift_lam sf in
-    let lhs = Down (abstractx_S_f_g sf sg (Var 0)) in
-    let beta_1 = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) f' in
-    let app_1 = Eq_L (AppL beta_1 g') in
-    subst_shiftn f' sg 1 0 ;
-    let beta_2 = Beta (Abs (App (App ssf (Var 0)) (App (Var 1) (Var 0)))) g' in
-    let tran = Eq_L (Tran app_1 beta_2) in
-    let rhs = Eq_L (Symm tran) in
-    assert (_abstractx x (trlam S) = trlam S) ;
-    assert (_abstractx x (trlam f) = sf) ;
-    assert (_abstractx x (trlam g) = sg) ;
-    assert (_abstractx x (Var x) = Var 0) ;
-    assert (_abstractx x (trlam t) = App (App (trlam S) sf) sg) ;
-    assert (_abstractx x (App (trlam t) (Var x)) = App (App (App (trlam S) sf) sg) (Var 0)) ;
-    assert (abstractx x (App (trlam t) (Var x)) = Abs (App (App (App (trlam S) sf) sg) (Var 0))) ;
-    Eq_L (Tran lhs rhs)
-| K -> Down (Beta (Abs (Var 1)) (Var 0))
-| App K t ->
-  let t' = trlam t in
+= let f' = trlam f in
+  let sf = shift_lam f' in
+  not_free_trlam x f ;
+  _abstractxn_not_free 0 x f' ;
+  let beta_1 = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) sf in
+  let app_1 = Eq_L (AppL beta_1 (Var 0)) in
+  let down_1 = Down app_1 in
+  let s3f = shift_lam (shift_lam sf) in
+  subst_shiftn sf (Var 1) 1 0 ;
+  let beta_2 = Beta (Abs (App (App s3f (Var 0)) (App (Var 1) (Var 0)))) (Var 0) in
+  let down_2 = Down beta_2 in
+  let lhs = Eq_L (Tran down_1 down_2) in
+  let beta = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) (trlam f) in
+  let rhs = Eq_L (Symm beta) in
+  Eq_L (Tran lhs rhs)
+
+let abstract_S_2 (x : nat) (f g : ski)
+: Pure (lam_eq
+        (abstractx x (App (App (App (trlam S) (trlam f)) (trlam g)) (Var x)))
+        (trlam (App (App S f) g)))
+       (not_free x f /\ not_free x g)
+       (fun _ -> true)
+= let f' = trlam f in
+  let g' = trlam g in
+  not_free_trlam x f ;
+  not_free_trlam x g ;
+  _abstractxn_not_free 0 x f' ;
+  _abstractxn_not_free 0 x g' ;
+  let sf = shift_lam f' in
+  let sg = shift_lam g' in
+  let ssf = shift_lam sf in
+  let lhs = Down (abstractx_S_f_g sf sg (Var 0)) in
+  let beta_1 = Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) f' in
+  let app_1 = Eq_L (AppL beta_1 g') in
+  subst_shiftn f' sg 1 0 ;
+  let beta_2 = Beta (Abs (App (App ssf (Var 0)) (App (Var 1) (Var 0)))) g' in
+  let tran = Eq_L (Tran app_1 beta_2) in
+  let rhs = Eq_L (Symm tran) in
+  assert (_abstractx x (trlam S) = trlam S) ;
+  Eq_L (Tran lhs rhs)
+
+let abstract_K (x : nat) (t : ski)
+: Pure (lam_eq (abstractx x (App (App (trlam K) (trlam t)) (Var x))) (trlam (App K t)))
+       (not_free x t)
+       (fun _ -> true)
+= let t' = trlam t in
   let st = shift_lam t' in
   not_free_trlam x t ;
   _abstractxn_not_free 0 x t' ; 
@@ -163,7 +163,18 @@ let abstractx_fnl (x : nat) (t : ski)
   let beta = Beta (Abs (Var 1)) t' in
   let rhs = Eq_L (Symm beta) in
   Eq_L (Tran lhs rhs)
-| I -> Down (Beta (Var 0) (Var 0))
+
+let abstractx_fnl (x : nat) (t : ski)
+: Pure (lam_eq (abstractx x (App (trlam t) (Var x))) (trlam t))
+       (fnl t /\ not_free x t)
+       (fun _ -> true)
+= match t with
+  | S -> Down (Beta (Abs (Abs (App (App (Var 2) (Var 0)) (App (Var 1) (Var 0))))) (Var 0))
+  | App S f -> abstract_S_1 x f
+  | App (App S f) g -> abstract_S_2 x f g
+  | K -> Down (Beta (Abs (Var 1)) (Var 0))
+  | App K t -> abstract_K x t
+  | I -> Down (Beta (Var 0) (Var 0))
 
 let rec trlam_preserves_eq (#t #u : ski) (r : ski_eq t u)
 : Tot (lam_eq (trlam t) (trlam u)) (decreases r)

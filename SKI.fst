@@ -112,13 +112,31 @@ let rec free (i : nat) (t : term) : Tot bool (decreases t)
 
 let not_free (i : nat) (t : term) = not (free i t)
 
-let rec freshn (n : nat) (t : term)
-: Pure nat true (fun i -> forall (j : nat). free (j + n) t ==> i > j) (decreases t)
+let rec _freshn (n : nat) (t : term)
+: Tot nat (decreases t)
 = match t with
   | Var i -> if i < n then 0 else i - n + 1
-  | Abs t' ->  freshn (n + 1) t'
-  | App t u -> max (freshn n t) (freshn n u)
+  | Abs t' -> _freshn (n + 1) t'
+  | App t u -> max (_freshn n t) (_freshn n u)
   | _ -> 0
+
+let rec lem_freshn (n : nat) (t : term) (j : nat)
+: Lemma (requires free (j + n) t) (ensures _freshn n t > j) (decreases t)
+= match t with
+  | Abs t' -> lem_freshn (n + 1) t' j
+  | App t u -> 
+    if free (j + n) t
+    then lem_freshn n t j
+    else lem_freshn n u j
+  | _ -> ()
+
+let freshn (n : nat) (t : term)
+: Pure nat true (fun i -> forall (j : nat). free (j + n) t ==> i > j)
+= let i = _freshn n t in
+  introduce forall (j : nat). free (j + n) t ==> i > j with
+  introduce free (j + n) t ==> i > j with
+  _. lem_freshn n t j;
+  i
 
 let fresh (t : term) : i : nat {not_free i t} = freshn 0 t
 
