@@ -3,7 +3,7 @@ module Subst
 open SKI
 
 let rec shiftn_plus (n : nat) (t : term) (k : nat)
-: Tot term (decreases t)
+: Pure term true (fun t' -> k > 0 ==> not_free (n + k - 1) t') (decreases t)
 = match t with
   | Var i -> if i < n then t else Var (i + k)
   | App t u -> App (shiftn_plus n t k) (shiftn_plus n u k)
@@ -12,24 +12,9 @@ let rec shiftn_plus (n : nat) (t : term) (k : nat)
 
 let shift_plus (t : term) (k : nat) = shiftn_plus 0 t k
 
-// TODO reescribir en funcion de shiftn_plus
-let rec shiftn (n : nat) (t : term)
+let shiftn (n : nat) (t : term)
 : Pure term true (fun t' -> not_free n t') (decreases t) =
-  match t with
-  | Var i -> if i < n then Var i else Var (i + 1)
-  | Abs t -> Abs (shiftn (n + 1) t)
-  | App t u -> App (shiftn n t) (shiftn n u)
-  | _ -> t
-
-let rec shiftn_not_free (n : nat) (t : term) (i : nat)
-: Lemma (requires i >= n /\ not_free i t)
-        (ensures not_free (i + 1) (shiftn n t))
-        (decreases t)
-= match t with
-  | Var j -> ()
-  | App t u -> shiftn_not_free n t i ; shiftn_not_free n u i
-  | Abs t -> shiftn_not_free (n + 1) t (i + 1)
-  | _ -> ()
+  shiftn_plus n t 1
 
 let rec shiftn_lam_lem (n : nat) (t : lam)
 : Lemma (ensures is_Lam (shiftn n t)) (decreases t)
@@ -57,7 +42,7 @@ let shift_lam (t : lam) : Pure lam true (fun t' -> not (free 0 t'))
 let shift_ski (t : ski) : Pure ski true (fun t' -> not (free 0 t'))
 = shiftn_ski 0 t
 
-// estan al reves los args xdd
+// no estan en orden los args: sust t v n = [v / Var n] t
 let rec subst (t v : term) (n : nat) : term =
   match t with
   | Var i ->
@@ -109,24 +94,6 @@ let rec nshiftn (n k : nat) (t : term)
 : term
 = if k = 0 then t else shiftn n (nshiftn n (k - 1) t)
 
-let rec nshiftn_not_free (n k : nat) (t : term) (i : nat)
-: Lemma (requires i >= n /\ not_free i t)
-        (ensures not_free (i + k) (nshiftn n k t))
-= if k = 0 then () else (
-    nshiftn_not_free n (k - 1) t i ;
-    shiftn_not_free n (nshiftn n (k - 1) t) (i + k - 1)
-  )
-
-let nshift (n : nat) (t : term)
-: term
-= nshiftn 0 n t
-
-let nshift_not_free (n : nat) (t : term) (i : nat)
-: Lemma (requires not_free i t)
-        (ensures not_free (i + n) (nshift n t))
-= nshiftn_not_free 0 n t i
-
-
 let rec shift_plus_nshift (n : nat) (t : term) (k : nat)
 : Lemma (ensures shiftn_plus n t k = nshiftn n k t) (decreases %[t ; k])
 = match t with
@@ -158,17 +125,6 @@ let rec shift_plus_nshift (n : nat) (t : term) (k : nat)
     if k = 0
     then ()
     else shift_plus_nshift n t (k - 1)
-
-// let rec nshift_shift
-
-let rec subst_shift_plus (t v : term) (n k : nat)
-: Lemma (subst (shiftn_plus n t (k + 1)) v n = shiftn_plus n t k)
-= match t with
-  | App t u ->
-    subst_shift_plus t v n k ;
-    subst_shift_plus u v n k
-  | Abs t -> subst_shift_plus t (shift v) (n + 1) k
-  | _ -> ()
 
 let rec subst_shiftn (t v : term) (n i : nat)
 : Lemma (subst (nshiftn i (n + 1) t) v (n + i) = nshiftn i n t)

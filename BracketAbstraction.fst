@@ -31,14 +31,11 @@ let rec closed_bracket (n : nat) (t : nclosed_term n)
     closed_abstraction (n + 1) (bracket_abstraction t)
   | _ -> ()
 
-let nclosed_abstraction (n : pos) (t : nclosed_ski n) : nclosed_ski (n -1) =
-  closed_abstraction n t ;
-  abstract t
-
 let nclosed_bracket_abstraction (n : nat) (t : nclosed_lam n) : nclosed_ski n =
   closed_bracket n t ;
   bracket_abstraction t
 
+// Mapeamos lambdas cerrados a terminos SKI cerrados
 let closed_bracket_abstraction (t : closed_lam) : closed_ski =
   closed_bracket 0 t ;
   bracket_abstraction t

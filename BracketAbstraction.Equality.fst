@@ -48,9 +48,6 @@ let rec subst_ski_eq (#t #u: ski) (r : ski_eq t u)
       subst_ski_eq (ext (i + 1)) v in
     Zeta ext'
 
-let app2 (t u v : ski) : ski = App (App t u) v
-let app3 (t u v w : ski) : ski = App (app2 t u v) w
-
 let ( @ ) (t u : ski) : ski = App t u
 
 let abstract_S_ski_eq (f g x y : ski)
@@ -103,7 +100,7 @@ let abstract_I_ski_eq (x y : ski)
   Eq_S (Tran (Eq_S (Tran red_S app)) red_I)
 
 
-
+// t = u ==> abs(t) = abs(u)
 let rec abstract_ski_eq (#t #u : ski) (t_eq_u : ski_eq t u)
 : Tot (ski_eq (abstract t) (abstract u))
       (decreases t_eq_u)
@@ -219,7 +216,7 @@ let rec subst_bracket (t : lam) (v : lam) (i : nat)
   | App t u -> app_eq_ski (subst_bracket t v i) (subst_bracket u v i)
   | _ -> Eq_S (Refl _)
 
-
+// t = u ==> [t] = [u]
 let rec bracket_preserves_eq (#t #u : lam) (r : lam_eq t u)
 : Tot (ski_eq (bracket_abstraction t) (bracket_abstraction u)) (decreases r) =
   match r with

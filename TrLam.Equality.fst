@@ -25,15 +25,6 @@ let abstractxn (n : nat) (x : nat) (t : lam) : lam = Abs (_abstractxn n x t)
 
 let abstractx (x : nat) (t : lam) = abstractxn 0 x t
 
-let rec subst_abstractxn (n : nat) (t v : lam) (x : nat)
-: Lemma (requires not_free (x + n) t) (ensures subst (_abstractxn n x t) v n = t)
-        (decreases t)
-= match t with
-  | Var i -> ()
-  | App t u -> subst_abstractxn n t v x ; subst_abstractxn n u v x
-  | Abs t -> subst_abstractxn (n + 1) t (shift_lam v) x 
-  | _ -> ()
-
 let rec shiftn_abstractxn (n i x : nat) (t : lam)
 : Lemma (ensures shiftn_lam i (_abstractxn (n + i) x t) =
                 _abstractxn (n + i + 1) x (shiftn_lam i t))
@@ -176,6 +167,7 @@ let abstractx_fnl (x : nat) (t : ski)
   | App K t -> abstract_K x t
   | I -> Down (Beta (Var 0) (Var 0))
 
+// t = y ==> tr(t) = tr(u)
 let rec trlam_preserves_eq (#t #u : ski) (r : ski_eq t u)
 : Tot (lam_eq (trlam t) (trlam u)) (decreases r)
 = match r with
