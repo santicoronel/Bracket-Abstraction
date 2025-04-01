@@ -23,6 +23,9 @@ let _abstractx = _abstractxn 0
 
 let abstractxn (n : nat) (x : nat) (t : lam) : lam = Abs (_abstractxn n x t)
 
+// abstracción general para cualquier variable
+// en particular, abstractx 0 t    = Abs t
+// en general,   (abstractx x t) v = [u / Var x] t
 let abstractx (x : nat) (t : lam) = abstractxn 0 x t
 
 let rec shiftn_abstractxn (n i x : nat) (t : lam)
@@ -35,6 +38,7 @@ let rec shiftn_abstractxn (n i x : nat) (t : lam)
   | Abs t -> shiftn_abstractxn n (i + 1) x t 
   | _ -> ()
 
+// `abstractx` conmuta con la sustitución
 let rec abstractxn_subst (n k : nat) (x : nat) (t v : lam)
 : Lemma (ensures _abstractxn (n + k) x (subst_lam t v k) =
                   subst_lam (_abstractxn (n + k + 1) x t) (_abstractxn (n + k) x v) k)
@@ -60,8 +64,8 @@ let rec eq__abstractxn (n : nat) (x : nat) (#t #u : lam) (r : lam_eq t u)
     Beta (_abstractxn (n + 1) x t) (_abstractxn n x u)
   | Down r -> Down (eq__abstractxn (n + 1) x r)
 
+// `abstractx` preserva igualdad
 let eq_abstractx (x: nat) (#t #u: lam) (r: lam_eq t u) = Down (eq__abstractxn 0 x r)
-
 
 let rec _abstractxn_not_free (n x : nat) (t : lam)
 : Lemma (requires not_free (x + n) t) (ensures _abstractxn n x t = shiftn n t)
@@ -71,6 +75,8 @@ let rec _abstractxn_not_free (n x : nat) (t : lam)
   | Abs t -> _abstractxn_not_free (n + 1) x t
   | _ -> ()
 
+
+// casos particulares para `abstractx_fnl`
 
 let abstractx_S_f_g (f g x : lam)
 : lam_eq (App (App (App (trlam S) f) g) x) (App (App f x) (App g x))
@@ -155,6 +161,7 @@ let abstract_K (x : nat) (t : ski)
   let rhs = Eq_L (Symm beta) in
   Eq_L (Tran lhs rhs)
 
+// eta-equivalencia especializada para fnl 
 let abstractx_fnl (x : nat) (t : ski)
 : Pure (lam_eq (abstractx x (App (trlam t) (Var x))) (trlam t))
        (fnl t /\ not_free x t)
@@ -167,7 +174,7 @@ let abstractx_fnl (x : nat) (t : ski)
   | App K t -> abstract_K x t
   | I -> Down (Beta (Var 0) (Var 0))
 
-// t = y ==> tr(t) = tr(u)
+// t = u ==> tr(t) = tr(u)
 let rec trlam_preserves_eq (#t #u : ski) (r : ski_eq t u)
 : Tot (lam_eq (trlam t) (trlam u)) (decreases r)
 = match r with

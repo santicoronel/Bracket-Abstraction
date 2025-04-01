@@ -3,7 +3,7 @@ module SKI.Equality
 open SKI
 open Subst
 
-
+// forma funcional 
 let fnl (t : term) : bool = match t with
   | App (App S _) _ -> true
   | App S _ -> true
@@ -16,6 +16,7 @@ let fnl (t : term) : bool = match t with
 
 let rel (a b : Type) = a -> b -> Type
 
+// esquema de equivalencia general para términos con aplicación
 noeq
 type eq (#a : Type) (app : a -> a -> a) (r : rel a a)
 : a -> a -> Type =
@@ -32,6 +33,7 @@ type eq (#a : Type) (app : a -> a -> a) (r : rel a a)
 
 let lapp (x y : lam) : z : lam {z = App x y} = App x y
 
+// igualdad en lambda términos
 noeq
 type lam_eq : lam -> lam -> Type =
   | Beta : t : lam -> u : lam -> lam_eq (App (Abs t) u) (subst0 t u)
@@ -41,6 +43,8 @@ type lam_eq : lam -> lam -> Type =
 
 let sapp (x y : ski) : z : ski {z = App x y} = App x y
 
+// igualdad en términos SKI
+// como presentada en "Lambda-Calculus and Combinators - an Introduction" (cap. 9)
 noeq
 type ski_eq : ski -> ski -> Type =
   | RedS : f : ski -> g : ski -> x : ski ->
@@ -48,12 +52,12 @@ type ski_eq : ski -> ski -> Type =
   | RedK : a : ski -> b : ski ->
             ski_eq (App (App K a) b) a
   | RedI : x : ski -> ski_eq (App I x) x
+  // fnl t /\ fnl u /\ (forall x \notin FV(t, u). t x = u x) ==> t = u
   | Zeta : #t : ski {fnl t} -> #u : ski {fnl u} ->
            (i : nat {not_free i t && not_free i u} ->
            ski_eq (App t (Var i)) (App u (Var i))) ->
            ski_eq t u
   | Eq_S : #t : ski -> #u : ski -> eq sapp ski_eq t u -> ski_eq t u
-
 
 
 let app_eq_ski (#t #t' #u #u' : ski)

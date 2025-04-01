@@ -5,6 +5,8 @@ open SKI.Equality
 open BracketAbstraction
 open Subst
 
+// abstraer y despues aplicar es equivalente a sustituir
+// i.e. `abstract` se comporta como esperamos
 let rec abstract_App (t v : ski)
 : ski_eq (App (abstract t) v) (subst_ski t v 0)
 = match t with
@@ -23,7 +25,7 @@ let rec abstract_App (t v : ski)
   | I -> RedK I v
   | Unit -> RedK Unit v
 
-
+// sustitución preserva igualdad
 let rec subst_ski_eq (#t #u: ski) (r : ski_eq t u)
                      (v : ski)
 : Tot (ski_eq (subst_ski t v 0) (subst_ski u v 0))
@@ -48,7 +50,10 @@ let rec subst_ski_eq (#t #u: ski) (r : ski_eq t u)
       subst_ski_eq (ext (i + 1)) v in
     Zeta ext'
 
+
 let ( @ ) (t u : ski) : ski = App t u
+
+// casos particulares de `abstract_ski_eq`
 
 let abstract_S_ski_eq (f g x y : ski)
 : ski_eq (((S @ ((S @ ((S @ (K @ S)) @ f)) @ g)) @ x) @ y)
@@ -145,13 +150,14 @@ let rec abstract_ski_eq (#t #u : ski) (t_eq_u : ski_eq t u)
   in Zeta ext'
 
 
-
+// shift conmuta con abs()
 let rec shift_abs (n : nat) (t : ski)
 : Lemma (shiftn n (abstract t) = abstract (shiftn_ski (n + 1) t))
 = match t with
   | App t u -> shift_abs n t ; shift_abs n u 
   | _ -> ()
 
+// shift conmuta con [| - |]
 let rec shift_bracket (i : nat) (t : lam)
 : Lemma (ensures shiftn i (bracket_abstraction t) = bracket_abstraction (shiftn_lam i t))
         (decreases t)
@@ -187,6 +193,7 @@ let rec ski_eq_abstract (t : ski)
     Eq_S (Tran hi_app eq_SK)
   | _ -> Eq_S (Refl _)
 
+// sustitucion conmuta con abs()
 let rec subst_abstract (t : ski) (v : ski) (i : nat)
 : ski_eq (abstract (subst_ski t (shift_ski v) (i + 1)))
          (subst_ski (abstract t) v i)
@@ -199,7 +206,7 @@ let rec subst_abstract (t : ski) (v : ski) (i : nat)
     else Eq_S (Refl _)
   | _ -> Eq_S (Refl _)
 
-
+// sustitucion conmuta con [| - |]
 let rec subst_bracket (t : lam) (v : lam) (i : nat)
 : Tot (ski_eq (bracket_abstraction (subst_lam t v i))
               (subst_ski (bracket_abstraction t) (bracket_abstraction v) i))
@@ -216,7 +223,7 @@ let rec subst_bracket (t : lam) (v : lam) (i : nat)
   | App t u -> app_eq_ski (subst_bracket t v i) (subst_bracket u v i)
   | _ -> Eq_S (Refl _)
 
-// t = u ==> [t] = [u]
+// t = u ==> [| t |] = [| u |]
 let rec bracket_preserves_eq (#t #u : lam) (r : lam_eq t u)
 : Tot (ski_eq (bracket_abstraction t) (bracket_abstraction u)) (decreases r) =
   match r with

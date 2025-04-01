@@ -12,8 +12,12 @@ let rec trlam (t : ski) : lam =
     let g = Var 1 in
     let x = Var 0 in
     Abs (Abs (Abs (App (App f x) (App g x))))
-  | K -> Abs (Abs (Var 1))
-  | I -> Abs (Var 0)
+  | K -> 
+    let x = Var 1 in
+    Abs (Abs x)
+  | I -> 
+    let x = Var 0 in
+    Abs x
   | App t u -> App (trlam t) (trlam u)
 
 let rec not_free_trlam (i : nat) (t : ski)

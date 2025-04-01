@@ -42,7 +42,7 @@ let shift_lam (t : lam) : Pure lam true (fun t' -> not (free 0 t'))
 let shift_ski (t : ski) : Pure ski true (fun t' -> not (free 0 t'))
 = shiftn_ski 0 t
 
-// no estan en orden los args: sust t v n = [v / Var n] t
+// subst t v n = [v / Var n] t
 let rec subst (t v : term) (n : nat) : term =
   match t with
   | Var i ->
@@ -94,6 +94,7 @@ let rec nshiftn (n k : nat) (t : term)
 : term
 = if k = 0 then t else shiftn n (nshiftn n (k - 1) t)
 
+// resultado auxiliar para probar `subst_shiftn`
 let rec shift_plus_nshift (n : nat) (t : term) (k : nat)
 : Lemma (ensures shiftn_plus n t k = nshiftn n k t) (decreases %[t ; k])
 = match t with

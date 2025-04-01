@@ -2,6 +2,8 @@ module BracketAbstraction
 
 open SKI
 
+// Presentación clásica de algoritmo de abstraction elimination.
+
 let rec abstract (t : ski) : Tot ski (decreases t) =
   match t with
   | Var 0 -> I
@@ -35,7 +37,7 @@ let nclosed_bracket_abstraction (n : nat) (t : nclosed_lam n) : nclosed_ski n =
   closed_bracket n t ;
   bracket_abstraction t
 
-// Mapeamos lambdas cerrados a terminos SKI cerrados
+// mapeamos términos lambdas cerrados a términos SKI cerrados
 let closed_bracket_abstraction (t : closed_lam) : closed_ski =
   closed_bracket 0 t ;
   bracket_abstraction t
