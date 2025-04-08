@@ -5,7 +5,6 @@ open Subst
 
 let rec trlam (t : ski) : lam =
   match t with
-  | Unit -> Unit
   | Var i -> Var i
   | S -> 
     let f = Var 2 in

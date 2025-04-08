@@ -23,7 +23,6 @@ let rec abstract_App (t v : ski)
   | S -> RedK S v
   | K -> RedK K v
   | I -> RedK I v
-  | Unit -> RedK Unit v
 
 // sustitución preserva igualdad
 let rec subst_ski_eq (#t #u: ski) (r : ski_eq t u)
@@ -239,4 +238,3 @@ let rec bracket_preserves_eq (#t #u : lam) (r : lam_eq t u)
     let bracket_u = bracket_abstraction u in
     Eq_S (Tran (abstract_App bracket_t bracket_u) (Eq_S (Symm (subst_bracket t u 0))))
   | Down r -> abstract_ski_eq (bracket_preserves_eq r)
-  

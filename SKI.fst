@@ -4,7 +4,6 @@ open FStar.List.Tot
 
 
 type term : Type =
-  | Unit : term 
   | Var : nat -> term
   | S : term
   | K : term
@@ -27,7 +26,6 @@ let nclosed_App (n : nat) (t u : nclosed_term n)
 : Lemma (nclosed n (App t u)) = ()
 
 let rec is_Lam (t : term) : bool = match t with
-  | Unit -> true
   | Var _ -> true
   | Abs t -> is_Lam t
   | App t u -> is_Lam t && is_Lam u
@@ -40,7 +38,6 @@ let nclosed_lam (n : nat) = t : lam {nclosed n t}
 let closed_lam = nclosed_lam 0
 
 let rec is_SKI (t : term) : bool = match t with
-  | Unit -> true
   | Var _ -> true
   | S -> true
   | K -> true
